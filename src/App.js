@@ -1,23 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import * as socketIO from "socket.io-client";
+import MainMenu from "./features/MainMenu";
+import Room from "./features/Room";
+
+export const socket = socketIO.connect('http://localhost:3000');
 
 function App() {
+
+  const [roomConfig, setRoomConfig] = React.useState(null)
+
+  React.useEffect(() => {
+
+    socket.once('connect', () => {
+      console.log(socket)
+    })
+
+    socket.on('new room config', roomConfig => {
+      setRoomConfig(roomConfig)
+    })
+
+    socket.on('joined room', roomConfig => {
+      setRoomConfig(roomConfig)
+    })
+
+    socket.on('leaved room', roomConfig => {
+      setRoomConfig(roomConfig)
+    })
+
+    socket.on('kicked', roomCode => {
+      setRoomConfig(null)
+      alert(`you are kicked from room ${roomCode}`)
+    })
+
+    socket.on('someone kicked', roomConfig => {
+      setRoomConfig(roomConfig)
+    })
+
+    socket.on('new chat', roomConfig => {
+      setRoomConfig(roomConfig)
+    })
+  }, [])
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {roomConfig !== null
+      ? <Room roomConfig={roomConfig} setRoomConfig={setRoomConfig}/>
+      : <MainMenu setRoomConfig={setRoomConfig}/>}
     </div>
   );
 }
