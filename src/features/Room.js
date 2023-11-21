@@ -1,7 +1,7 @@
 import {socket} from "../App";
 import React, {useRef} from "react";
 
-const Room = ({roomConfig, setRoomConfig}) => {
+const Room = ({roomConfig, setRoomConfig, des}) => {
 
   const [message, setMessage] = React.useState('')
   const [maxUser, setMaxUser] = React.useState(roomConfig.max_user)
@@ -25,7 +25,7 @@ const Room = ({roomConfig, setRoomConfig}) => {
 
   React.useEffect(() => {
     socket.emit('config room', roomConfig.code, roomConfig, () => {console.log('success')})
-  }, [roomConfig])
+  }, [roomConfig.max_user, roomConfig.room_type])
 
 
   const onMessageChange = e => {
@@ -33,8 +33,25 @@ const Room = ({roomConfig, setRoomConfig}) => {
   }
 
   const onMessageSent = () => {
-    socket.emit('chat', roomConfig.code, message, roomConfig => {
-      setRoomConfig(roomConfig)
+
+    const encryptedMessage = des.encrypt(message)
+    console.log('plain message : ', message)
+    console.log('encrypted text : ', encryptedMessage)
+
+    socket.emit('chat', roomConfig.code, encryptedMessage, message => {
+      const plaintext = des.decrypt(message['content'])
+      setRoomConfig(config => {
+        return {
+          ...config,
+          messages: [
+            ...config['messages'],
+            {
+              ...message,
+              content: plaintext
+            }
+          ]
+        }
+      })
     })
   }
 
